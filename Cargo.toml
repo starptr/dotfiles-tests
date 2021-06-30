@@ -1,5 +1,5 @@
 [package]
-name = "dotfiles-tests"
+name = "polka-dots"
 version = "0.1.0"
 authors = ["Yuto Nishida <starptr@users.noreply.github.com>"]
 edition = "2018"

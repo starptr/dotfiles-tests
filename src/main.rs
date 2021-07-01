@@ -73,14 +73,11 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     let binary_path = binary_path.to_str().unwrap();
     env::set_var("POLKA_DOTS_BIN", binary_path);
 
-    println!("DOTS_REPO {:?}", option_env!("DOTS_REPO"));
-    println!("DOTS_REPO_GIT {:?}", option_env!("DOTS_REPO_GIT"));
-
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
         let mut args = vec!["build".to_owned()];
         // Pass DOTS_REPO_GIT as a build arg if present
-        args.extend(option_env!("DOTS_REPO_GIT").and_then(|drg| Some(vec!["--build-arg".to_owned(), format!("DOTS_REPO_GIT={}", drg)])).unwrap_or_default());
+        args.extend(option_env!("DOTS_REPO_GIT_RELATIVE").and_then(|drg| Some(vec!["--build-arg".to_owned(), format!("DOTS_REPO_GIT_RELATIVE={}", drg)])).unwrap_or_default());
 
         //let args: Vec<&str> = args.iter().map(AsRef::as_ref).collect();
 

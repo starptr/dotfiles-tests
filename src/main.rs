@@ -78,9 +78,15 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
 
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
+        let mut args = vec!["build".to_owned()];
+        // Pass DOTS_REPO_GIT as a build arg if present
+        args.extend(option_env!("DOTS_REPO_GIT").and_then(|drg| Some(vec!["--build-arg".to_owned(), format!("DOTS_REPO_GIT={}", drg)])).unwrap_or_default());
+
+        //let args: Vec<&str> = args.iter().map(AsRef::as_ref).collect();
+
         // Build image
         run_cmd!(
-            docker-compose build 2>&1;
+            docker-compose $[args] 2>&1;
                 )?;
     };
 

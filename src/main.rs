@@ -109,6 +109,9 @@ fn run(run_matches: &ArgMatches) -> Result<()> {
     env::set_current_dir(dirs::home_dir().unwrap()).unwrap();
 
     println!("inside :yeah:");
+    run_cmd!(
+        ls -al;
+            )?;
 
     Ok(())
 }

@@ -73,6 +73,9 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     let binary_path = binary_path.to_str().unwrap();
     env::set_var("POLKA_DOTS_BIN", binary_path);
 
+    println!("DOTS_REPO {:?}", option_env!("DOTS_REPO"));
+    println!("DOTS_REPO_GIT {:?}", option_env!("DOTS_REPO_GIT"));
+
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
         // Build image

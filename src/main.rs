@@ -73,6 +73,11 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     let binary_path = binary_path.to_str().unwrap();
     env::set_var("POLKA_DOTS_BIN", binary_path);
 
+    run_cmd!(
+        ls -al;
+        ls 2>&1;
+            )?;
+
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
         // Build image

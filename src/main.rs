@@ -98,7 +98,7 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     let testing_command = format!("~/bin/{} run", env!("CARGO_BIN_NAME"));
     run_cmd! (
         docker-compose ps 2>&1;
-        docker exec -it $container_id bash -c $testing_command;
+        docker exec -t $container_id bash -c $testing_command;
              )?;
 
     // Stop container if not interactive

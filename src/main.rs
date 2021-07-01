@@ -114,10 +114,15 @@ fn run(run_matches: &ArgMatches) -> Result<()> {
     // Set cwd to home
     env::set_current_dir(dirs::home_dir().unwrap()).unwrap();
 
-    println!("inside :yeah:");
+    env::set_var("SCRIPT", "true");
+
     run_cmd!(
-        ls -al;
+        echo "Starting a test...";
+        echo "hamu\ndebconf debconf/frontend select Noninteractive" | sudo -kS debconf-set-selections;
+        bash -c "{ echo y; echo hamu; echo hamu; echo hamu; echo hamu; } | ./bin/yadm bootstrap" 2>&1;
             )?;
+        //alias sudo="sudo -S";
+        //echo "y\nhamu\nhamu" | ./bin/yadm bootstrap 2>&1;
 
     Ok(())
 }

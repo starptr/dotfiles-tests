@@ -89,6 +89,7 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
 
     // Start container
     run_cmd! (
+        echo "Starting container..."
         docker-compose up -d 2>&1;
              )?;
     // Grab container id for executing in later
@@ -96,6 +97,7 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     // Test and stop container
     let testing_command = format!("~/bin/{} run", env!("CARGO_BIN_NAME"));
     run_cmd! (
+        docker-compose ps 2>&1;
         docker exec -it $container_id bash -c $testing_command;
              )?;
 

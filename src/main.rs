@@ -89,7 +89,7 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
 
     // Start container
     run_cmd! (
-        echo "Starting container..."
+        echo "Starting container...";
         docker-compose up -d 2>&1;
              )?;
     // Grab container id for executing in later

@@ -79,8 +79,6 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
         // Pass DOTS_REPO_GIT as a build arg if present
         args.extend(option_env!("DOTS_REPO_GIT_RELATIVE").and_then(|drg| Some(vec!["--build-arg".to_owned(), format!("DOTS_REPO_GIT_RELATIVE={}", drg)])).unwrap_or_default());
 
-        //let args: Vec<&str> = args.iter().map(AsRef::as_ref).collect();
-
         // Build image
         run_cmd!(
             docker-compose $[args] 2>&1;
@@ -97,8 +95,8 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     // Test and stop container
     let testing_command = format!("~/bin/{} run", env!("CARGO_BIN_NAME"));
     run_cmd! (
-        docker-compose ps 2>&1;
-        docker exec -t $container_id bash -c $testing_command;
+        echo "Running tests...";
+        docker exec -t $container_id bash -c $testing_command 2>&1;
              )?;
 
     // Stop container if not interactive

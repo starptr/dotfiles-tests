@@ -23,3 +23,13 @@ cargo run -- deploy --skip-build
 ```
 
 Flags can be combined.
+
+## Gotchas
+
+When using Docker and GitHub Actions, watch out:
+
+- `COPY` doesn't `chown` recursively. Make sure to set the target directory's ownership or otherwise it will be created under root.
+- The host file for `COPY` is a relative path.
+- The environment variables in `Dockerfile` are not passed from the shell. Use `--build-args` and `ARG` to explicitly pass them.
+- The `-i` option in `docker exec -it` doesn't work, probably because logs aren't interactive
+- Do not use a `container`. `docker` doesn't work inside a container because it is inside one.

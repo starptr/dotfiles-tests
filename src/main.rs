@@ -77,7 +77,7 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     if !deploy_matches.is_present("skip_build") {
         // Build image
         run_cmd!(
-            docker-compose build;
+            docker compose build;
                 )?;
     };
 

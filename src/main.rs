@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use clap::{App, Arg, ArgMatches};
 use cmd_lib::*;
 use pretty_env_logger;
-use std::env;
+use std::{env,path::{Path, PathBuf}};
 use dirs;
 
 #[rustfmt::skip::macros(run_cmd)]
@@ -64,7 +64,7 @@ fn main() -> Result<()> {
 
 fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     // Set cwd to home
-    env::set_current_dir(dirs::home_dir().unwrap()).unwrap();
+    env::set_current_dir(option_env!("DOTS_REPO").map(|str| Path::new(str)).unwrap_or(dirs::home_dir().unwrap().as_path()))?;
 
     // Set polka dots env var to be mounted
     // This variable is used in docker-compose.yml
@@ -73,18 +73,11 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     let binary_path = binary_path.to_str().unwrap();
     env::set_var("POLKA_DOTS_BIN", binary_path);
 
-    println!("{}", env!("PATH"));
-
-    run_cmd!(
-        /usr/bin/docker help;
-        /usr/bin/docker help 2>&1;
-            )?;
-
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
         // Build image
         run_cmd!(
-            docker compose build;
+            docker-compose build 2>&1;
                 )?;
     };
 

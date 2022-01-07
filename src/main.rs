@@ -1,15 +1,18 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use clap::{App, Arg, ArgMatches};
 use cmd_lib::*;
-use pretty_env_logger;
-use std::{env,path::{Path, PathBuf}};
 use dirs;
+use pretty_env_logger;
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
 #[rustfmt::skip::macros(run_cmd)]
-
 #[derive(strum_macros::Display, PartialEq, Clone, Copy)]
 enum Mode {
-    Deploy, Run,
+    Deploy,
+    Run,
 }
 
 fn main() -> Result<()> {
@@ -38,24 +41,29 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         ("deploy", Some(deploy_matches)) => {
+            // polka-dots is running on the CI host machine
             is_interactive = deploy_matches.is_present("interactive");
             mode = Some(Mode::Deploy);
             deploy(deploy_matches)
-        },
+        }
         ("run", Some(run_matches)) => {
+            // polka-dots is running in a container
             mode = Some(Mode::Run);
             run(run_matches)
-        },
-        _ => {
-            Err(anyhow!("No command specified"))
-        },
-    }.map_err(|e| {
+        }
+        _ => Err(anyhow!("No command specified")),
+    }
+    .map_err(|e| {
         eprintln!("Testing failed! Current mode: {}", mode.unwrap());
         if is_interactive {
-            println!("Interactive mode enabled; skipping container stops including on test failure.");
+            println!(
+                "Interactive mode enabled; skipping container stops including on test failure."
+            );
         } else if run_cmd! (
             docker-compose down 2>&1;
-        ).is_err() {
+        )
+        .is_err()
+        {
             cmd_error!("Failed to stop containers.");
         };
         e
@@ -64,7 +72,11 @@ fn main() -> Result<()> {
 
 fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
     // Set cwd to home
-    env::set_current_dir(option_env!("DOTS_REPO").map(|str| Path::new(str)).unwrap_or(dirs::home_dir().unwrap().as_path()))?;
+    env::set_current_dir(
+        option_env!("DOTS_REPO")
+            .map(|str| Path::new(str))
+            .unwrap_or(dirs::home_dir().unwrap().as_path()),
+    )?;
 
     // Set polka dots env var to be mounted
     // This variable is used in docker-compose.yml
@@ -75,37 +87,51 @@ fn deploy(deploy_matches: &ArgMatches) -> Result<()> {
 
     // Skip build if flagged
     if !deploy_matches.is_present("skip_build") {
-        let mut args = vec!["build".to_owned()];
+        let mut args: Vec<String> = Vec::new();
+        //args.extend([
+        //    "-f".to_owned(),
+        //    "./dots-dockerfiles/docker-compose.yml".to_owned(),
+        //]);
+        args.extend(["build".to_owned()]);
         // Pass DOTS_REPO_GIT as a build arg if present
-        args.extend(option_env!("DOTS_REPO_GIT_RELATIVE").and_then(|drg| Some(vec!["--build-arg".to_owned(), format!("DOTS_REPO_GIT_RELATIVE={}", drg)])).unwrap_or_default());
+        args.extend(
+            option_env!("DOTS_REPO_GIT_RELATIVE")
+                .and_then(|drg| {
+                    Some(vec![
+                        "--build-arg".to_owned(),
+                        format!("DOTS_REPO_GIT_RELATIVE={}", drg),
+                    ])
+                })
+                .unwrap_or_default(),
+        );
 
         // Build image
         run_cmd!(
-            docker-compose $[args] 2>&1;
-                )?;
+        docker-compose $[args] 2>&1;
+            )?;
     };
 
     // Start container
     run_cmd! (
-        echo "Starting container...";
-        docker-compose up -d 2>&1;
-             )?;
+    echo "Starting container...";
+    docker-compose up -d 2>&1;
+         )?;
     // Grab container id for executing in later
     let container_id = run_fun!(docker-compose ps -q)?;
     // Test and stop container
     let testing_command = format!("~/bin/{} run", env!("CARGO_BIN_NAME"));
     run_cmd! (
-        echo "Running tests...";
-        docker exec -t $container_id bash -c $testing_command 2>&1;
-             )?;
+    echo "Running tests...";
+    docker exec -t $container_id bash -c $testing_command 2>&1;
+         )?;
 
     // Stop container if not interactive
     if deploy_matches.is_present("interactive") {
         println!("Interactive mode enabled; skipping container stops.");
     } else {
         run_cmd!(
-            docker-compose down 2>&1;
-                )?;
+        docker-compose down 2>&1;
+            )?;
     }
     Ok(())
 }
@@ -117,12 +143,12 @@ fn run(run_matches: &ArgMatches) -> Result<()> {
     env::set_var("SCRIPT", "true");
 
     run_cmd!(
-        echo "Starting a test...";
-        echo "hamu\ndebconf debconf/frontend select Noninteractive" | sudo -kS debconf-set-selections;
-        bash -c "{ echo y; echo hamu; echo hamu; echo hamu; echo hamu; } | ./bin/yadm bootstrap" 2>&1;
-            )?;
-        //alias sudo="sudo -S";
-        //echo "y\nhamu\nhamu" | ./bin/yadm bootstrap 2>&1;
+    echo "Starting a test...";
+    echo "hamu\ndebconf debconf/frontend select Noninteractive" | sudo -kS debconf-set-selections;
+    bash -c "{ echo y; echo hamu; echo hamu; echo hamu; echo hamu; } | ./bin/yadm bootstrap" 2>&1;
+        )?;
+    //alias sudo="sudo -S";
+    //echo "y\nhamu\nhamu" | ./bin/yadm bootstrap 2>&1;
 
     Ok(())
 }
